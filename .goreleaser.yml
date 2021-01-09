@@ -1,0 +1,50 @@
+before:
+  hooks:
+    - go mod vendor
+    - go install
+    - echo '```' > docs.md; ih-abstract -h >> docs.md 2>&1; echo '```' >> docs.md; gomarkdoc -u . >> docs.md
+release:
+  github:
+    owner: andrewrech
+    name: ih-abstract
+builds:
+  -
+    main: .
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - freebsd
+      - windows
+      - darwin
+dockers:
+  -
+    binaries:
+      - ih-abstract
+    image_templates:
+      - "andrewrech/ih-abstract:{{ .Tag }}"
+      - "andrewrech/ih-abstract:v{{ .Major }}"
+      - "andrewrech/ih-abstract:v{{ .Major }}.{{ .Minor }}"
+      - "andrewrech/ih-abstract:latest"
+archives:
+  -
+    replacements:
+      darwin: Darwin
+      linux: Linux
+      windows: Windows
+      amd64: x86_64
+    files:
+      - "*md"
+signs:
+  -
+    artifacts: all
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'

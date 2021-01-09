@@ -24,7 +24,7 @@ Cross compiling for Alpine requires disabling CGO:
 
 ## Usage
 
-See `ih-abstract -h` or [documentation](https://github.com/andrewrech/ih-abstract/blob/main/docs.md)).
+See `ih-abstract -h` or [documentation](https://github.com/andrewrech/ih-abstract/blob/main/docs.md).
 
 ## Authors
 

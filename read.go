@@ -94,10 +94,9 @@ func readSQLRows(rows *sql.Rows) (r rawRecords) {
 		}
 
 		close(r.out)
+		stopCounter <- 1
 		r.done <- 1
 	}()
-
-	stopCounter <- 1
 
 	return r
 }
@@ -121,7 +120,7 @@ func readCSV(in io.Reader) (r rawRecords) {
 
 	var counter int64
 	stopCounter := make(chan int)
-	count(&counter, "read (sql)", stopCounter)
+	count(&counter, "read (csv)", stopCounter)
 
 	// process records
 	go func() {

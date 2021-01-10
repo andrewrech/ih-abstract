@@ -1,17 +1,13 @@
 package main
 
 import (
-	"database/sql/driver"
 	"encoding/csv"
-	"fmt"
 	"io"
 	"log"
 	"os"
-	"strings"
 	"sync/atomic"
 	"testing"
 
-	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -82,65 +78,6 @@ func TestMain(m *testing.M) {
 	os.Exit(exitVal)
 }
 
-func TestUsage(t *testing.T) {
-
-	usage()
-
-	_ = flagParse()
-
-	printConf()
-
-}
-
-func TestLocateConfig(t *testing.T) {
-
-	os.Setenv("XDG_CONFIG_HOME", "ih-abstractTestdirectory")
-	os.Setenv("HOME", "ih-abstractTestdirectory")
-
-	f, _ := locateDefaultConfig()
-
-	if f != "" {
-		t.Error("", f)
-	}
-
-}
-
-func TestLoadConfig(t *testing.T) {
-
-	vars, err := loadConfig("ih-abstract.yml")
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	tests := map[string]struct {
-		got  string
-		want string
-	}{
-		"Username": {got: vars.Username, want: "username"},
-		"Password": {got: vars.Password, want: "password"},
-		"Host":     {got: vars.Host, want: "host"},
-		"Port":     {got: vars.Port, want: "443"},
-		"Database": {got: vars.Database, want: "database"},
-		"Query":    {got: vars.Query, want: "SELECT TOP 100 FROM table"},
-	}
-
-	for name, tc := range tests {
-		name := name
-		tc := tc
-
-		t.Run(name, func(t *testing.T) {
-
-			got := tc.got
-
-			diff := cmp.Diff(tc.want, got)
-			if diff != "" {
-				t.Fatalf(diff)
-			}
-		})
-	}
-
-}
-
 func helperTestReader(f string) (out chan []string) {
 	conn, err := os.Open(f)
 	if err != nil {
@@ -202,7 +139,6 @@ func helperCorrectHeader() (h []string) {
 	return
 }
 
-// helperCsvLines counts lines of a CSV file.
 func helperCsvLines(f string) int64 {
 	var counter int64
 
@@ -234,175 +170,6 @@ func helperCsvLines(f string) int64 {
 	return counter
 }
 
-// TestReadLiveRecord tests that a record can be read from the live PHI-containing SQL databae.
-func TestReadLiveRecord(t *testing.T) {
-
-	if _, present := os.LookupEnv("IH_ABSTRACT_TEST_LIVE_CONNECTION"); !present {
-		t.Skip("IH_ABSTRACT_TEST_LIVE_CONNECTION is unset, skipping connection test")
-	}
-
-	db, err := connect("../secrets/ih-abstract.yml")
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	defer db.Close()
-
-	r := DB("ih-abstract.yml", db)
-
-	for l := range r.out {
-		_ = l
-	}
-
-	<-r.done
-
-}
-
-func TestSql(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		fmt.Println("failed to open sqlmock database:", err)
-	}
-	defer db.Close()
-
-	in := helperTestReader(TestFile)
-
-	h := helperCorrectHeader()
-
-	rows := sqlmock.NewRows(h)
-
-	entry := make([]driver.Value, len(h))
-
-	for l := range in {
-		for i := range l {
-			entry[i] = driver.Value(l[i])
-		}
-
-		rows.AddRow(entry...)
-	}
-
-	// run SQL test
-	query := "SELECT"
-	mock.ExpectQuery(query).WillReturnRows(rows)
-
-	r := DB("ih-abstract.yml", db)
-
-	var counter int64
-
-	for range r.out {
-		atomic.AddInt64(&counter, 1)
-	}
-
-	<-r.done
-
-	t.Run("Read from mock SQL", func(t *testing.T) {
-		diff := cmp.Diff(int64(7), counter)
-		if diff != "" {
-			t.Fatalf(diff)
-		}
-	})
-}
-
-func TestAddCheckRecords(t *testing.T) {
-	var r Records
-	r.Store = make(Store)
-
-	l := []string{
-		"10000001",
-		"ZZZ, ZZZ",
-		"CBC",
-		"100",
-	}
-
-	t.Run("Add record", func(t *testing.T) {
-		err := r.Add(&l)
-		if err != nil {
-			t.Fatal(err)
-		}
-	})
-
-	t.Run("Check record", func(t *testing.T) {
-		exists, err := r.Check(&l)
-		if !exists || err != nil {
-			t.Fatal("failed to check record")
-		}
-	})
-}
-
-func TestExistingRecords(t *testing.T) {
-	f := TestFile
-
-	r := Existing(&f)
-
-	t.Run("existing", func(t *testing.T) {
-		diff := cmp.Diff(int(7), len(r.Store))
-		if diff != "" {
-			t.Fatalf(diff)
-		}
-	})
-}
-
-func BenchmarkExistingRecords(b *testing.B) {
-	f := TestFilePhi
-
-	var r *Records
-
-	for i := 0; i < b.N; i++ {
-		r = Existing(&f)
-	}
-
-	_ = r
-}
-
-func TestNewRecords(t *testing.T) {
-	f := TestFileOld
-	r := Existing(&f)
-
-	in := helperTestReader(TestFile)
-
-	h := helperCorrectHeader()
-
-	colNames := headerParse(h)
-
-	out, done := New(r, colNames, in)
-
-	for l := range out {
-		_ = l
-	}
-
-	<-done
-
-	t.Run("Detect new data", func(t *testing.T) {
-		lines := helperCsvLines("new-ids.txt")
-
-		diff := cmp.Diff(int64(4), lines)
-		if diff != "" {
-			t.Fatalf(diff)
-		}
-	})
-}
-
-func BenchmarkNewRecords(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		f := TestFilePhi
-		r := Existing(&f)
-
-		in := helperTestReader(TestFile)
-
-		h := helperCorrectHeader()
-
-		colNames := headerParse(h)
-
-		out, done := New(r, colNames, in)
-
-		for l := range out {
-			_ = l
-		}
-
-		<-done
-	}
-}
-
 func BenchmarkFilter(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		in := helperTestReader(TestFilePhi)
@@ -419,114 +186,6 @@ func BenchmarkFilter(b *testing.B) {
 
 		_ = out
 	}
-}
-
-func TestRead(t *testing.T) {
-	mock := strings.NewReader(`MRN,MRNFacility,MedViewPatientID,PatientName,DOB,Sex,DrawnDate,DiagServiceID,AccessionNumber,HNAMOrderID,OrderTypeLocalID,OrderTypeMnemonic,TestTypeLocalID,TestTypeMnemonic,ResultDate,Value,Status
-"1000000001      ","UID       ",1111111111,"ZZZ, ZZZ",1950006-16 00:00:00.000,M,2020-11-15 05:28:00.000,GL,00000111111111,1111111111,1111111111,CMV,1111111111111,WBC,2014-11-15 05:37:58.000,Test removal on basis of Order,A
-`)
-
-	r := readCSV(mock)
-
-	<-r.done
-
-	t.Run("read CSV rows", func(t *testing.T) {
-		var i int64
-
-		for range r.out {
-			i++
-		}
-
-		diff := cmp.Diff(int64(1), i)
-
-		if diff != "" {
-			t.Fatalf(diff)
-		}
-	})
-}
-
-func TestRowWriter(t *testing.T) {
-	mock := strings.NewReader(`MRN,MRNFacility,MedViewPatientID,PatientName,DOB,Sex,DrawnDate,DiagServiceID,AccessionNumber,HNAMOrderID,OrderTypeLocalID,OrderTypeMnemonic,TestTypeLocalID,TestTypeMnemonic,ResultDate,Value,Status
-"1000000001      ","UID       ",1111111111,"ZZZ, ZZZ",1950006-16 00:00:00.000,M,2020-11-15 05:28:00.000,GL,00000111111111,1111111111,1111111111,CMV,1111111111111,WBC,2014-11-15 05:37:58.000,Test removal on basis of Order,A
-`)
-
-	r := readCSV(mock)
-
-	<-r.done
-
-	t.Run("write CSV rows", func(t *testing.T) {
-		writeDone := make(chan int)
-
-		f := "test-write.csv"
-
-		WriteRows(r.out, f, r.header, writeDone)
-		defer os.Remove("test-write.csv")
-
-		<-writeDone
-
-		lines := helperCsvLines(f)
-
-		diff := cmp.Diff(int64(2), lines)
-
-		if diff != "" {
-			t.Fatalf(diff)
-		}
-	})
-}
-
-func TestDiffUnq(t *testing.T) {
-	l := []string{"A", "B", "C", "A"}
-
-	in := make(chan []string)
-
-	go func() {
-		in <- l
-		close(in)
-	}()
-
-	done := DiffUnq(in, "test-diff")
-
-	<-done
-
-	conn, err := os.Open(TestFileDiffUnq)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	r := csv.NewReader(conn)
-	r.LazyQuotes = true
-
-	_, err = r.Read() // discard header
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	for x, n := range [][]string{{"A"}, {"B"}, {"C"}} {
-		x := x
-		n := n
-
-		t.Run(fmt.Sprintln("unique string", x), func(t *testing.T) {
-			i, err := r.Read()
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			diff := cmp.Diff(n, i)
-
-			if diff != "" {
-				t.Fatalf(diff)
-			}
-		})
-	}
-
-	t.Run("Detect filtering of old unique strings", func(t *testing.T) {
-		lines := helperCsvLines("test-diff-unq-new.txt")
-
-		diff := cmp.Diff(int64(4), lines)
-		if diff != "" {
-			t.Fatalf(diff)
-		}
-	})
 }
 
 func TestFilter(t *testing.T) {

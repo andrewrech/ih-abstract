@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -29,10 +30,10 @@ func TestDBLive(t *testing.T) {
 
 	defer db.Close()
 
-	r := DB("ih-abstract.yml", db)
+	r := DB(configPath, db)
 
 	for l := range r.out {
-		_ = l
+		spew.Dump(l)
 	}
 
 	<-r.done

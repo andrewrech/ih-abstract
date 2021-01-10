@@ -1,6 +1,6 @@
 username: username
 password: password
-host: host
-port: 443
+host: 0.0.0.0
+port: 80
 database: database
-query: SELECT TOP 100 FROM table
+query: SELECT TOP (5) * FROM [database].[xx].[xx]

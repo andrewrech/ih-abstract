@@ -34,10 +34,10 @@ func TestLoadConfig(t *testing.T) {
 	}{
 		"Username": {got: vars.Username, want: "username"},
 		"Password": {got: vars.Password, want: "password"},
-		"Host":     {got: vars.Host, want: "host"},
-		"Port":     {got: vars.Port, want: "443"},
+		"Host":     {got: vars.Host, want: "0.0.0.0"},
+		"Port":     {got: vars.Port, want: "80"},
 		"Database": {got: vars.Database, want: "database"},
-		"Query":    {got: vars.Query, want: "SELECT TOP 100 FROM table"},
+		"Query":    {got: vars.Query, want: "SELECT TOP (5) * FROM [database].[xx].[xx]"},
 	}
 
 	for name, tc := range tests {

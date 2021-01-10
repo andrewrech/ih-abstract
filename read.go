@@ -8,8 +8,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/davecgh/go-spew/spew"
-
 	_ "github.com/denisenkom/go-mssqldb" // sql driver
 )
 
@@ -99,7 +97,6 @@ func readSQLRows(rows *sql.Rows) (r rawRecords) {
 		r.done <- 1
 	}()
 
-	spew.Dump("return")
 	stopCounter <- 1
 
 	return r

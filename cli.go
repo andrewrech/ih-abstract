@@ -100,8 +100,8 @@ TESTING:
                           PHI-containing data. Data is available within our
                           organization upon request. To test the live server
                           connection, set environment variable
-                          IH_ABSTRACT_TEST_LIVE_CONNECTION; this test is disabled
-                          by default.
+                          IH_ABSTRACT_TEST_CONFIG to a test configuration
+                          file path. These tests is disabled by default.
 
 BENCHMARKING:
 

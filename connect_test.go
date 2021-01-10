@@ -9,12 +9,11 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/google/go-cmp/cmp"
 )
 
 // TestReadLiveRecord tests that a record can be read from the live PHI-containing SQL databae.
-func TestReadLiveRecord(t *testing.T) {
+func TestDBLive(t *testing.T) {
 
 	var configPath string
 	var present bool
@@ -40,7 +39,7 @@ func TestReadLiveRecord(t *testing.T) {
 
 }
 
-func TestDB(t *testing.T) {
+func TestDBMock(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		fmt.Println("failed to open sqlmock database:", err)
@@ -71,8 +70,7 @@ func TestDB(t *testing.T) {
 
 	var counter int64
 
-	for l := range r.out {
-		spew.Dump(l)
+	for range r.out {
 		atomic.AddInt64(&counter, 1)
 	}
 

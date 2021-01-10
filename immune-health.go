@@ -188,6 +188,11 @@ func filter(in chan []string, header []string) (channels map[string](chan []stri
 
 	nProc := runtime.GOMAXPROCS(0) - ioCores
 
+	// run at least two filtering processes
+	if nProc < 2 {
+		nProc = 2
+	}
+
 	signal := make(chan int, nProc)
 
 	// create patterns to use for filtering

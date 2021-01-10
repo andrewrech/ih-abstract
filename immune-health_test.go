@@ -26,6 +26,7 @@ func TestFilter(t *testing.T) {
 	in := helperTestReader(TestFile)
 
 	header := helperCorrectHeader()
+
 	out, filterDone := filter(in, header)
 
 	<-filterDone

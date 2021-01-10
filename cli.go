@@ -22,7 +22,7 @@ func flagParse() (f flags) {
 	example := flag.Bool("print-config", false, "Print an example configuration file and exit")
 	noFilter := flag.Bool("no-filter", false, "Save input data to .csv and exit without Immune Health filtering")
 	old := flag.String("old", "", "Path to existing ih.csv output data from previous run (optional)")
-	sql := flag.Bool("sq", false, "Read input from Microsoft SQL database instead of Stdin")
+	sql := flag.Bool("sql", false, "Read input from Microsoft SQL database instead of Stdin")
 
 	flag.Parse()
 

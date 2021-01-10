@@ -12,13 +12,8 @@ func BenchmarkFilter(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		in := helperTestReader(TestFilePhi)
 
-		colNames := make(map[string]int)
-
-		colNames["OrderTypeMnemonic"] = 11
-		colNames["TestTypeMnemonic"] = 13
-		colNames["Value"] = 15
-
-		out, filterDone := filter(in, colNames)
+		header := helperCorrectHeader()
+		out, filterDone := filter(in, header)
 
 		<-filterDone
 
@@ -27,16 +22,11 @@ func BenchmarkFilter(b *testing.B) {
 }
 
 func TestFilter(t *testing.T) {
-	colNames := make(map[string]int)
-
-	colNames["OrderTypeMnemonic"] = 11
-	colNames["TestTypeMnemonic"] = 13
-	colNames["Value"] = 15
-	colNames["Status"] = 16
 
 	in := helperTestReader(TestFile)
 
-	out, filterDone := filter(in, colNames)
+	header := helperCorrectHeader()
+	out, filterDone := filter(in, header)
 
 	<-filterDone
 
@@ -81,9 +71,9 @@ func csvOutTestHelper(oldFile, newFile string) {
 
 	r := readCSV(f)
 
-	colNames := headerParse(r.header)
+	channels, filterDone := filter(r.out, r.header)
 
-	channels, filterDone := filter(r.out, colNames)
+	colNames := headerParse(r.header)
 
 	var diffDone chan int
 	channels["ih"], diffDone = New(existing, colNames, channels["diff"])

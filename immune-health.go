@@ -163,7 +163,7 @@ func filterRow(l []string, colNames map[string]int, pat map[string](*regexp.Rege
 }
 
 // filter filters a raw data input stream row by row.
-func filter(in chan []string, colNames map[string]int) (channels map[string](chan []string), done chan int) {
+func filter(in chan []string, header []string) (channels map[string](chan []string), done chan int) {
 	done = make(chan int)
 
 	var buffer int64 = 1e7
@@ -197,6 +197,8 @@ func filter(in chan []string, colNames map[string]int) (channels map[string](cha
 	pat["msiReport"] = regexp.MustCompile(MsiReport)
 	pat["pdl1Result"] = regexp.MustCompile(Pdl1Result)
 	pat["msiResult"] = regexp.MustCompile(MsiResult)
+
+	colNames := headerParse(header)
 
 	var counter int64
 

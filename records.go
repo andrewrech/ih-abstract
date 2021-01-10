@@ -186,8 +186,10 @@ func New(r *Records, colNames map[string]int, in chan []string) (out chan []stri
 }
 
 // Diff diffs old and new record sets.
-func Diff(oldFile *string, in chan []string, colNames map[string]int) (out chan []string, done chan int) {
+func Diff(oldFile *string, in chan []string, header []string) (out chan []string, done chan int) {
 	var buf int64 = 2e7
+
+	colNames := headerParse(header)
 
 	out = make(chan []string, buf)
 

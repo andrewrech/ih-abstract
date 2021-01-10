@@ -34,15 +34,13 @@ func main() {
 	// pull data and filter, then diff and exit
 	if !*flags.noFilter {
 
-		colNames := headerParse(r.header)
-
-		channels, filterDone := filter(r.out, colNames)
+		channels, filterDone := filter(r.out, r.header)
 
 		pdl1Done := DiffUnq(channels["pdl1Ret"], "pdl1")
 		msiDone := DiffUnq(channels["msiRet"], "msi")
 
 		var diffDone chan int
-		channels["ih"], diffDone = Diff(flags.old, channels["diff"], colNames)
+		channels["ih"], diffDone = Diff(flags.old, channels["diff"], r.header)
 
 		writeDone := write(r.header, channels)
 

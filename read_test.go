@@ -32,3 +32,55 @@ func TestReadCSV(t *testing.T) {
 		}
 	})
 }
+
+func TestReadSQLRows(t *testing.T) {
+	var config string
+	var present bool
+
+	if config, present = os.LookupEnv("IH_ABSTRACT_TEST_CONFIG"); !present {
+		t.Skip("IH_ABSTRACT_TEST_CONFIG is unset, skipping real SQL test")
+	}
+
+	db, err := connect(config)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	vars, err := loadConfig(config)
+
+	vars.Query = "SELECT TOP (1000) * FROM [DMEE_ExtAccess].[immune_health].[LabData] WHERE MRNFacility = 'UID' AND DrawnDate >= '2020-01-01'"
+
+	rows, err := db.Query(vars.Query)
+
+	r := readSQLRows(rows)
+
+	var counter int64
+
+	for range r.out {
+		counter++
+	}
+
+	<-r.done
+
+	log.Println(counter)
+}
+
+func TestRead(t *testing.T) {
+	var f flags
+	sql := false
+	f.sql = &sql
+
+	conn, err := os.Open(TestFile)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	r := read(f, conn)
+	<-r.done
+
+	t.Run("read", func(t *testing.T) {
+		for l := range r.out {
+			_ = l
+		}
+	})
+}

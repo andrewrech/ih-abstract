@@ -164,50 +164,47 @@ func New(r *Records, header []string, in chan []string, out chan []string, done 
 		}
 
 		w.done()
-
 		close(out)
-		done <- 1
+		close(done)
 
-		log.Println("UIDs with new records:", counter)
+		log.Println("Person-instances with new records:", counter)
 	}()
+}
 
-	return out, done
+// RecordID returns a single input data column name containing a person-instance identifier.
+// The person instance identifier is either an MRN (preferred) or UID.
+func RecordID(header []string) (id string, err error) {
+	for _, id := range header {
+		if strings.Contains(id, "MRN") {
+			return id, nil
+		}
+	}
+
+	for _, id := range header {
+		if strings.Contains(id, "UID") {
+			return id, nil
+		}
+	}
+
+	return "", errors.New("cannot identify patient instance column name")
 }
 
 // Diff diffs old and new record sets.
-func Diff(oldFile *string, in chan []string, header []string) (out chan []string, done chan int) {
+func Diff(oldFile *string, in chan []string, header []string) (out chan []string, done chan struct{}) {
 	var buf int64 = 2e7
-
-	colNames := headerParse(header)
-
 	out = make(chan []string, buf)
-
-	done = make(chan int)
+	done = make(chan struct{})
 
 	go func() {
-		if *oldFile == "" {
+		var records Records
 
-			log.Println("No existing record set provided; returning all records")
+		r := &records
 
-			for l := range in {
-				out <- l
-			}
+		r.Store = make(Store)
 
-			close(out)
-			done <- 1
-		}
+		r = Existing(oldFile)
 
-		if *oldFile != "" {
-			var records Records
-
-			r := &records
-
-			r.Store = make(Store)
-
-			r = Existing(oldFile)
-
-			out, done = New(r, colNames, in)
-		}
+		New(r, header, in, out, done)
 	}()
 
 	return out, done

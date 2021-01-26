@@ -63,11 +63,13 @@ func TestNewRecords(t *testing.T) {
 
 	in := helperTestReader(TestFile)
 
-	h := helperCorrectHeader()
+	header := helperCorrectHeader()
 
-	colNames := headerParse(h)
+	var buf int64 = 2e7
+	out := make(chan []string, buf)
+	done := make(chan struct{})
 
-	out, done := New(r, colNames, in)
+	New(r, header, in, out, done)
 
 	for l := range out {
 		_ = l
@@ -92,11 +94,13 @@ func BenchmarkNewRecords(b *testing.B) {
 
 		in := helperTestReader(TestFile)
 
-		h := helperCorrectHeader()
+		header := helperCorrectHeader()
 
-		colNames := headerParse(h)
+		var buf int64 = 2e7
+		out := make(chan []string, buf)
+		done := make(chan struct{})
 
-		out, done := New(r, colNames, in)
+		New(r, header, in, out, done)
 
 		for l := range out {
 			_ = l

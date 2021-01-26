@@ -16,45 +16,32 @@ func TestDiffUnq(t *testing.T) {
 		close(in)
 	}()
 
-	done := DiffUnq(in, "test-diff")
+	channels, done := DiffUnq(in, "test-diff")
 
 	<-done
 
-	conn, err := os.Open(TestFileDiffUnq)
-	if err != nil {
-		log.Fatalln(err)
+	var unq []string
+
+	for l := range channels["test-diff-unique-strings"] {
+		unq = append(unq, l...)
 	}
 
-	r := csv.NewReader(conn)
-	r.LazyQuotes = true
-
-	_, err = r.Read() // discard header
-	if err != nil {
-		log.Fatalln(err)
+	var unqNew []string
+	for l := range channels["test-diff-unique-strings-new"] {
+		unqNew = append(unqNew, l...)
 	}
 
-	for x, n := range [][]string{{"A"}, {"B"}, {"C"}} {
-		x := x
-		n := n
+	t.Run("Detect filtering of unique strings", func(t *testing.T) {
+		diff := cmp.Diff(unq, []string{"A", "B", "C"})
 
-		t.Run(fmt.Sprintln("unique string", x), func(t *testing.T) {
-			i, err := r.Read()
-			if err != nil {
-				t.Fatal(err)
-			}
+		if diff != "" {
+			t.Fatalf(diff)
+		}
+	})
 
-			diff := cmp.Diff(n, i)
+	t.Run("Detect filtering of new strings compared to an existing output file", func(t *testing.T) {
+		diff := cmp.Diff(unqNew, []string{"C"})
 
-			if diff != "" {
-				t.Fatalf(diff)
-			}
-		})
-	}
-
-	t.Run("Detect filtering of old unique strings", func(t *testing.T) {
-		lines := helperCsvLines("test-diff-unq-new.txt")
-
-		diff := cmp.Diff(int64(4), lines)
 		if diff != "" {
 			t.Fatalf(diff)
 		}

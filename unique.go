@@ -38,55 +38,61 @@ func DiffUnq(in chan []string, name string) (channels map[string](chan []string)
 	unqRecordsName := strings.Join([]string{name, "-unique-strings"}, "")
 	unqRecordsNameNew := strings.Join([]string{name, "-unique-strings-new"}, "")
 
-	channels[unqRecordsName] = make(chan []string, buffer)
+	channels[unqRecordsName] = make(chan []string, buf)
 
-	channels[unqRecordsNameNew] = make(chan []string, buffer)
+	channels[unqRecordsNameNew] = make(chan []string, buf)
 
 	// read previous output
 	f := strings.Join([]string{name, "-unique-strings.csv"}, "")
-	existing := prevUnq(f)
+	prevResults := prevUnq(f)
 
-	n := make(map[string](bool))
+	var records Records
+	records.Store = make(Store)
+	currentResults := &records
 
 	go func() {
-		for l := range in {
-			for _, i := range l { // each string of slice
-				s := i
+		for l := range in { // for each slice
+			for _, s := range l { // each string of slice
 
-				// skip if already seen
-				if n[s] {
-					continue
-				}
+				i := []string{s}
 
-				n[i] = true // add to map
-
-				err := allUnique.w.Write([]string{s})
+				existsCurrent, err := currentResults.Check(&i)
 				if err != nil {
 					log.Fatalln(err)
 				}
 
-				// write to file if record does not
-				// exist in existing records
-				exists, err := existing.Check(&[]string{s})
-				if err != nil {
-					log.Fatalln(err)
-				}
-
-				if !exists {
-					log.Println("New string:", s)
-
-					err := newUnique.w.Write([]string{s})
+				// string does not exist in current records
+				if !existsCurrent {
+					err = currentResults.Add(&i)
 					if err != nil {
 						log.Fatalln(err)
 					}
+
+					channels[unqRecordsName] <- []string{s}
+				}
+
+				// string does not exist in previous records
+				existsPrev, err := prevResults.Check(&i)
+				if err != nil {
+					log.Fatalln(err)
+				}
+
+				if !existsPrev {
+					err = prevResults.Add(&i)
+					if err != nil {
+						log.Fatalln(err)
+					}
+
+					log.Println("New string:", s)
+					channels[unqRecordsNameNew] <- []string{s}
 				}
 			}
 		}
 
-		allUnique.done()
-		newUnique.done()
-		done <- 1
+		close(channels[unqRecordsName])
+		close(channels[unqRecordsNameNew])
+		done <- struct{}{}
 	}()
 
-	return done
+	return channels, done
 }

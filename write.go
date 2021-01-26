@@ -54,14 +54,13 @@ func File(name string, h []string) (w Writer) {
 	return w
 }
 
-// Write appends strings to a CSV file using a Writer.
-func WriteRows(in chan []string, name string, h []string, done chan int) {
+// WriteRows appends strings to a CSV file using a Writer.
+func WriteRows(in chan []string, name string, h []string, done chan struct{}) {
 	w := File(name, h)
 
 	go func() {
 		for l := range in {
 			err := w.w.Write(l)
-
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -70,8 +69,34 @@ func WriteRows(in chan []string, name string, h []string, done chan int) {
 		}
 
 		w.done()
-		done <- 1
-
-		log.Println("wrote", w.counter, "records to", name)
+		done <- struct{}{}
 	}()
+}
+
+// Write writes results to output CSV files using a common header.
+func Write(h []string, in map[string](chan []string)) (done chan struct{}) {
+	done = make(chan struct{})
+
+	nOutputFiles := len(in)
+	signal := make(chan struct{}, nOutputFiles)
+
+	for i, c := range in {
+
+		// filename
+		var fn strings.Builder
+		fn.WriteString(i)
+		fn.WriteString(".csv")
+
+		WriteRows(c, fn.String(), h, signal)
+	}
+
+	go func() {
+		for i := 0; i < nOutputFiles; i++ {
+			<-signal
+		}
+
+		close(done)
+	}()
+
+	return done
 }

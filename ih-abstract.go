@@ -13,48 +13,79 @@ func main() {
 
 	log.Println("starting")
 
-	flags := flagParse()
+	f := flagParse()
 
-	if *flags.example {
+	if *f.example {
 		printConf()
 		os.Exit(0)
 	}
 
-	r := read(flags)
+	mainInner(f, os.Stdin)
+}
 
-	// no filtering
-	// pull data, diff and exit
-	if *flags.noFilter {
+// mainInner facilitates testing by allowing parameters to be passed to the main program code path.
+func mainInner(f flags, in *os.File) {
+	// parallel process completion signals
+	parallelProcesses := 9
+	doneSignals := make([]chan struct{}, parallelProcesses)
 
-		WriteRows(r.out, "./results.csv", r.header, r.done)
-		<-r.done
+	// result communication channels
+	allResults := make(map[string](chan []string))      // unfiltered
+	filteredResults := make(map[string](chan []string)) // from filtering
+	msiResults := make(map[string](chan []string))      // msi strings
+	pdl1Results := make(map[string](chan []string))     // pdl1 strings
+	var buf int64 = 2e7
+	diffResults := make(chan []string, buf) // results to diff
+
+	// read raw input data
+	r := read(f, in)
+	doneSignals[0] = r.done
+
+	// if no filter
+	// write all results and diff results
+	diffResults = make(chan []string, buf)
+	if *f.noFilter {
+		doneSignals[1] = make(chan struct{})
+		allResults["results"] = make(chan []string, buf)
+		allResults["results"], diffResults, doneSignals[1] = splitCh(r.out)
 	}
 
-	// in contrast
-	// filtering specifically for immune then
-	// pull data and filter, then diff and exit
-	if !*flags.noFilter {
-
-		channels, filterDone := filter(r.out, r.header)
-
-		_, pdl1Done := DiffUnq(channels["pdl1-to-diff"], "pdl1")
-		_, msiDone := DiffUnq(channels["msi-to-diff"], "msi")
-
-		diffDone := make(chan struct{})
-		if *flags.old != "" {
-			channels["results-increment"], diffDone = Diff(flags.old, channels["diff"], r.header)
+	// if immune health filter
+	// write filtered results, diff results, immune health results
+	if !*f.noFilter {
+		filteredResults, doneSignals[2] = filterResults(r.out, r.header)
+		// exclude intermediate channels
+		// containing 'diff' in channel name
+		// these are sent to DiffUnq below, not written out
+		for i, c := range filteredResults {
+			if strings.Contains(i, "diff") {
+				continue
+			}
+			allResults[i] = c
 		}
 
-		writeDone := Write(r.header, channels)
+		diffResults = filteredResults["diff"]
 
-		// close parallel processes sequentially
-		<-r.done
-		<-filterDone
-		<-pdl1Done
-		<-msiDone
-		<-diffDone
-		<-writeDone
+		// determine unique strings
+		pdl1Results, doneSignals[3] = DiffUnq(filteredResults["pdl1-to-diff"], "pdl1")
+		msiResults, doneSignals[4] = DiffUnq(filteredResults["msi-to-diff"], "msi")
+
+		// write unique strings
+		doneSignals[5] = Write([]string{"unique-result"}, pdl1Results)
+		doneSignals[6] = Write([]string{"unique-result"}, msiResults)
 	}
 
-	log.Println("done")
+	// diff
+	if *f.old != "" {
+		allResults["results-increment"], doneSignals[7] = Diff(f.old, diffResults, r.header)
+	}
+
+	doneSignals[8] = Write(r.header, allResults)
+
+	// wait for all parallel processes to finish
+	for _, signal := range doneSignals {
+		if signal != nil {
+			<-signal
+		}
+	}
 }

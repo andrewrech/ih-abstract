@@ -16,16 +16,23 @@ const TestFile = "test.csv"
 // Some records are removed to simulate old data.
 const TestFileOld = "test_old.csv"
 
-// TestFileDiffUnq contains simulated "old" unique strings that should not be present in new unique string .csv output.
-const TestFileDiffUnq = "test-diff-unq.csv"
-
 // TestFilePhi is a test CSV file containing real input data.
 // This file is available within our organization upon request.
-const TestFilePhi = "phi/test_phi.csv"
+const TestFilePhi = "test_phi.csv"
 
-// TestFileOldPhi is a test CSV file containing real outdated input data.
+// TestFilePhiOld is a test CSV file containing real outdated input data.
 // This file is available within our organization upon request.
-const TestFileOldPhi = "phi/test_old_phi.csv"
+const TestFilePhiOld = "test_phi_old.csv"
+
+// TestFilePhiGeneric is a test CSV file containing real input data.
+// The file contains generic pathology data.
+// This file is available within our organization upon request.
+const TestFilePhiGeneric = "test_phi_generic.csv"
+
+// TestFilePhiGenericOld is a test CSV file containing real outdated input data.
+// The file contains generic pathology data.
+// This file is available within our organization upon request.
+const TestFilePhiGenericOld = "test_phi_generic_old.csv"
 
 func TestMain(m *testing.M) {
 	previousDir, err := os.Getwd()

@@ -144,15 +144,13 @@ func readCSV(in io.Reader) (r rawRecords) {
 		}
 	}()
 
-	stopCounter <- 1
+	stopCounter <- struct{}{}
 
 	return r
 }
 
 // headerParse parses input data column names.
 func headerParse(h []string) (colNames map[string]int) {
-	log.Println("parsing header")
-
 	colNames = make(map[string]int)
 
 	for i, s := range h {

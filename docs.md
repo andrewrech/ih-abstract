@@ -5,7 +5,7 @@ Select raw data for Immune Health report generation.
 
 USAGE:
 
-  < ih-raw.csv | ih-abstract
+  < results-raw.csv | ih-abstract
 
 DEFAULTS:
 
@@ -14,7 +14,7 @@ DEFAULTS:
   -no-filter
     	Save input data to .csv and exit without Immune Health filtering
   -old string
-    	Path to existing ih.csv output data from previous run (optional)
+	Path to existing results.csv output data from last run (optional)
   -print-config
     	Print an example configuration file and exit
   -sq
@@ -42,10 +42,10 @@ OUTPUT:
 
   Output for report generation:
 
-    ih.csv:               input for the Immune Health R package that contains
+    results.csv:               input for the Immune Health R package that contains
                           all raw data required to generate reports
     new-ids.txt:           list of patient identifiers for which new raw data
-                          exists vs. previous run
+                          exists vs. last run
 
  Output for quality assurance:
 
@@ -55,9 +55,9 @@ OUTPUT:
     wbc.csv:           white blood cell counts
 
     pdl1-unq.txt:      unique PD-L1 strings
-    pdl1-unq-new.txt:  unique PD-L1 strings, new vs. previous run
+    pdl1-unq-new.txt:  unique PD-L1 strings, new vs. last run
     msi-unq.txt:       unique MSI strings
-    msi-unq-new.txt:   unique MSI strings, new vs. previous run
+    msi-unq-new.txt:   unique MSI strings, new vs. last run
 
 CONFIGURATION FILE:
 

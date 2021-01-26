@@ -17,11 +17,10 @@ type flags struct {
 
 // flags parses command line flags.
 func flagParse() (f flags) {
-
 	config := flag.String("config", "", "Path to ih-abstract.yml SQL connection configuration file")
 	example := flag.Bool("print-config", false, "Print an example configuration file and exit")
 	noFilter := flag.Bool("no-filter", false, "Save input data to .csv and exit without Immune Health filtering")
-	old := flag.String("old", "", "Path to existing ih.csv output data from previous run (optional)")
+	old := flag.String("old", "", "Path to existing results.csv output data from last run (optional)")
 	sql := flag.Bool("sql", false, "Read input from Microsoft SQL database instead of Stdin")
 
 	flag.Parse()
@@ -33,7 +32,6 @@ func flagParse() (f flags) {
 	f.sql = sql
 
 	return
-
 }
 
 // usage prints usage.
@@ -41,7 +39,7 @@ func usage() {
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "\nSelect raw data for Immune Health report generation.\n")
 		fmt.Fprintf(os.Stderr, "\nUSAGE:\n\n")
-		fmt.Fprintf(os.Stderr, "  < ih-raw.csv | ih-abstract\n")
+		fmt.Fprintf(os.Stderr, "  < results-raw.csv | ih-abstract\n")
 		fmt.Fprintf(os.Stderr, "\nDEFAULTS:\n\n")
 		flag.PrintDefaults()
 		fmt.Fprintf(os.Stderr, `
@@ -67,22 +65,21 @@ OUTPUT:
 
   Output for report generation:
 
-    ih.csv:               input for the Immune Health R package that contains
-                          all raw data required to generate reports
-    new-ids.txt:           list of patient identifiers for which new raw data
-                          exists vs. previous run
+    results.csv:                     all results
+    results-increment.csv:           new results since last run
+    new-ids.txt:                     patient identifiers with new results since last run
 
  Output for quality assurance:
 
-    pdl1.csv:          potential PD-L1 reports
-    msi.csv:           potential MSI reports
-    cpd.csv:           potential CPD reports
-    wbc.csv:           white blood cell counts
+    pdl1.csv:                        potential PD-L1 reports
+    msi.csv:                         potential MSI reports
+    cpd.csv:                         potential CPD reports
+    wbc.csv:                         white blood cell counts
 
-    pdl1-unq.txt:      unique PD-L1 strings
-    pdl1-unq-new.txt:  unique PD-L1 strings, new vs. previous run
-    msi-unq.txt:       unique MSI strings
-    msi-unq-new.txt:   unique MSI strings, new vs. previous run
+    pdl1-unique-strings.txt:         unique PD-L1 strings
+    pdl1-unique-strings-new.txt:     unique PD-L1 strings, new vs. last run
+    msi-unique-strings.txt:          unique MSI strings
+    msi-unique-strings-new.txt:      unique MSI strings, new vs. last run
 
 CONFIGURATION FILE:
 
@@ -96,16 +93,24 @@ CONFIGURATION FILE:
 TESTING:
 
  go test
-                          Note: some integration tests require restricted
+                          NOTE: some integration tests require restricted
                           PHI-containing data. Data is available within our
-                          organization upon request. To test the live server
-                          connection, set environment variable
-                          IH_ABSTRACT_TEST_CONFIG to a test configuration
-                          file path. These tests is disabled by default.
+                          organization upon request.
+
+													NOTE: To test the live server connection, set
+                          environment variable IH_ABSTRACT_TEST_CONFIG to
+                          a test configuration file path.
+                          These tests is disabled by default.
 
 BENCHMARKING:
 
   go test -bench=.
+                          NOTE: some benchmarks require restricted
+                          organization VPN access. Access is available within our
+                          organization upon request. To test the live server
+                          connection, set environment variable
+                          IH_ABSTRACT_TEST_CONFIG to a test configuration
+                          file path. These tests is disabled by default.
 
 `)
 	}

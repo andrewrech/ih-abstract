@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-// ih-abstract streams input raw pathology results to the immune.health.report R package for report generation and quality assurance. The input is .csv data or direct streaming from a Microsoft SQL driver-compatible database. The output is filtered .csv/.txt files for incremental new report generation and quality assurance.
+// ih-abstract streams input raw pathology results to the immune.health.report R package for report generation and quality assurance. The input is .csv data or direct streaming from a Microsoft SQL driver-compatible database. The output is filtered .csv files for incremental new report generation and quality assurance.
 // Optionally, Immune Health filtering can be turned off to use ih-abstract as a general method to retrieve arbitrary or incremental pathology results.
 func main() {
 	usage()
@@ -36,13 +36,15 @@ func main() {
 
 		channels, filterDone := filter(r.out, r.header)
 
-		pdl1Done := DiffUnq(channels["pdl1Ret"], "pdl1")
-		msiDone := DiffUnq(channels["msiRet"], "msi")
+		_, pdl1Done := DiffUnq(channels["pdl1-to-diff"], "pdl1")
+		_, msiDone := DiffUnq(channels["msi-to-diff"], "msi")
 
-		var diffDone chan int
-		channels["ih"], diffDone = Diff(flags.old, channels["diff"], r.header)
+		diffDone := make(chan struct{})
+		if *flags.old != "" {
+			channels["results-increment"], diffDone = Diff(flags.old, channels["diff"], r.header)
+		}
 
-		writeDone := write(r.header, channels)
+		writeDone := Write(r.header, channels)
 
 		// close parallel processes sequentially
 		<-r.done

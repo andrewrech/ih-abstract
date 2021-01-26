@@ -7,7 +7,7 @@ import (
 	"net/url"
 )
 
-// connect connects to the SQL database.
+// connect connects to an SQL database.
 func connect(config string) (db *sql.DB, err error) {
 
 	if config == "" {

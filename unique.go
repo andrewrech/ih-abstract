@@ -23,22 +23,28 @@ func prevUnq(f string) (r *Records) {
 	return r
 }
 
-// DiffUnq saves unique strings to an output file "-unq.txt".
-// If the output file already exists, the file is overwritten and a
-// second output file "-unq-new.txt" is generated. The second output
-// file contains only new strings not identified previously.
-func DiffUnq(in chan []string, name string) (done chan int) {
-	done = make(chan int)
+// DiffUnq identifies unique strings from an input stream and compares the unique strings to an existing output file. The function returns 1) unique strings and 2) new strings compared to the existing output file.
+func DiffUnq(in chan []string, name string) (channels map[string](chan []string), done chan struct{}) {
+	done = make(chan struct{})
+
+	var buf int64 = 1e7
+
+	// channels contains communication of rows
+	// between goroutines processing data
+	channels = make(map[string](chan []string))
 
 	// add to an existing records map if
 	// if CSV output already exists
-	f := strings.Join([]string{name, "-unq.txt"}, "")
-	newF := strings.Join([]string{name, "-unq-new.txt"}, "")
-	existing := prevUnq(f)
+	unqRecordsName := strings.Join([]string{name, "-unique-strings"}, "")
+	unqRecordsNameNew := strings.Join([]string{name, "-unique-strings-new"}, "")
 
-	// create new output files
-	newUnique := File(newF, []string{"unique-raw-string"})
-	allUnique := File(f, []string{"unique-raw-string-new"})
+	channels[unqRecordsName] = make(chan []string, buffer)
+
+	channels[unqRecordsNameNew] = make(chan []string, buffer)
+
+	// read previous output
+	f := strings.Join([]string{name, "-unique-strings.csv"}, "")
+	existing := prevUnq(f)
 
 	n := make(map[string](bool))
 

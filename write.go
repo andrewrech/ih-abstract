@@ -46,7 +46,6 @@ func File(name string, h []string) (w Writer) {
 		}
 
 		f.Close()
-		log.Println("finished writing", name)
 	}
 
 	w.done = done

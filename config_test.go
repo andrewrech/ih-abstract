@@ -9,7 +9,6 @@ import (
 )
 
 func TestLocateConfig(t *testing.T) {
-
 	os.Setenv("XDG_CONFIG_HOME", "ih-abstractTestdirectory")
 	os.Setenv("HOME", "ih-abstractTestdirectory")
 
@@ -18,11 +17,9 @@ func TestLocateConfig(t *testing.T) {
 	if f != "" {
 		t.Error("", f)
 	}
-
 }
 
 func TestLoadConfig(t *testing.T) {
-
 	vars, err := loadConfig("ih-abstract.yml")
 	if err != nil {
 		log.Fatalln(err)
@@ -45,7 +42,6 @@ func TestLoadConfig(t *testing.T) {
 		tc := tc
 
 		t.Run(name, func(t *testing.T) {
-
 			got := tc.got
 
 			diff := cmp.Diff(tc.want, got)
@@ -54,5 +50,4 @@ func TestLoadConfig(t *testing.T) {
 			}
 		})
 	}
-
 }

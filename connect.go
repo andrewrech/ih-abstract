@@ -44,7 +44,7 @@ func connect(config string) (db *sql.DB, err error) {
 type rawRecords struct {
 	header []string
 	out    chan []string
-	done   chan int
+	done   chan struct{}
 }
 
 // DB reads records from an Sql database.

@@ -79,10 +79,10 @@ func Existing(name *string) (rs *Records) {
 
 	r := readCSV(f)
 
-	signal := make(chan int)
+	signal := make(chan struct{})
 
 	var counter int64
-	stopCounter := make(chan int)
+	stopCounter := make(chan struct{})
 	count(&counter, "hashed", stopCounter)
 
 	for i := 0; i < runtime.GOMAXPROCS(0); i++ {
@@ -97,7 +97,7 @@ func Existing(name *string) (rs *Records) {
 
 				atomic.AddInt64(&counter, 1)
 			}
-			signal <- 1
+			signal <- struct{}{}
 		}()
 	}
 
@@ -107,7 +107,7 @@ func Existing(name *string) (rs *Records) {
 		<-signal
 	}
 
-	stopCounter <- 1
+	stopCounter <- struct{}{}
 
 	log.Println("total:", counter, "records")
 

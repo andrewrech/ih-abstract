@@ -44,7 +44,7 @@ func readSQLRows(rows *sql.Rows) (r rawRecords) {
 
 	// initialize channels
 	r.out = make(chan []string, buf)
-	r.done = make(chan int)
+	r.done = make(chan struct{})
 
 	var err error
 	r.header, err = rows.Columns()
@@ -65,7 +65,7 @@ func readSQLRows(rows *sql.Rows) (r rawRecords) {
 	}
 
 	var counter int64
-	stopCounter := make(chan int)
+	stopCounter := make(chan struct{})
 	count(&counter, "read (sql)", stopCounter)
 
 	go func() {
@@ -94,8 +94,8 @@ func readSQLRows(rows *sql.Rows) (r rawRecords) {
 		}
 
 		close(r.out)
-		stopCounter <- 1
-		r.done <- 1
+		stopCounter <- struct{}{}
+		r.done <- struct{}{}
 	}()
 
 	return r
@@ -107,7 +107,7 @@ func readCSV(in io.Reader) (r rawRecords) {
 
 	// initialize channels
 	r.out = make(chan []string, buf)
-	r.done = make(chan int)
+	r.done = make(chan struct{})
 
 	reader := csv.NewReader(in)
 	reader.LazyQuotes = true
@@ -119,7 +119,7 @@ func readCSV(in io.Reader) (r rawRecords) {
 	}
 
 	var counter int64
-	stopCounter := make(chan int)
+	stopCounter := make(chan struct{})
 	count(&counter, "read (csv)", stopCounter)
 
 	// process records
@@ -131,7 +131,7 @@ func readCSV(in io.Reader) (r rawRecords) {
 
 			switch {
 			case errors.Is(err, io.EOF):
-				r.done <- 1
+				r.done <- struct{}{}
 
 				close(r.out)
 

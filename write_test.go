@@ -18,7 +18,7 @@ func TestRowWriter(t *testing.T) {
 	<-r.done
 
 	t.Run("write CSV rows", func(t *testing.T) {
-		writeDone := make(chan int)
+		writeDone := make(chan struct{})
 
 		f := "test-write.csv"
 

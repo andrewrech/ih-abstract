@@ -131,57 +131,64 @@ func filterRow(l []string, colNames map[string]int, pat map[string](*regexp.Rege
 	// WBC are sent directly to output
 	// WBC are not counted as 'new data'
 	case WbcLymph(l[colNames["TestTypeMnemonic"]]):
-		channels["wbc"] <- l // WBC are
-		channels["ih"] <- l
+		channels["wbc"] <- l
+		channels["results"] <- l
 
 	case CPD(l[colNames["OrderTypeMnemonic"]]):
 		channels["cpd"] <- l
 		// CPD reports, PD-L1 reports, and MSI reports count
 		// as "new" data and trigger a new report
+		channels["results"] <- l
 		channels["diff"] <- l
 
 	case PDL1(l[colNames["Value"]]):
 		if pat["pdl1Report"].MatchString(l[colNames["Value"]]) {
+			channels["results"] <- l
 			channels["pdl1"] <- l
 			channels["diff"] <- l
 
 			pdl1Result := pat["pdl1Result"].FindAllString(l[colNames["Value"]], 10)
-			channels["pdl1Ret"] <- Whitespace(pdl1Result)
+			channels["pdl1-to-diff"] <- Whitespace(pdl1Result)
 		}
 
 	case MSI(l[colNames["Value"]]):
 		if pat["msiReport"].MatchString(l[colNames["Value"]]) {
-			channels["msi"] <- l
+			channels["results"] <- l
 			channels["diff"] <- l
+			channels["msi"] <- l
 
 			msiResult := pat["msiResult"].FindAllString(l[colNames["Value"]], 10)
-			channels["msiRet"] <- Whitespace(msiResult)
+			channels["msi-to-diff"] <- Whitespace(msiResult)
 		}
 	}
 
 	atomic.AddInt64(counter, 1)
 }
 
-// filter filters a raw data input stream row by row.
-func filter(in chan []string, header []string) (channels map[string](chan []string), done chan int) {
-	done = make(chan int)
+// filterResults filters a raw data input stream row by row.
+func filterResults(in chan []string, header []string) (results map[string](chan []string), done chan struct{}) {
+	done = make(chan struct{})
 
-	var buffer int64 = 1e7
+	var buf int64 = 1e7
 
 	// channels contains communication of rows
 	// between goroutines processing data
-	channels = make(map[string](chan []string))
-
-	// main output channel to ih.csv
-	// is closed by the the csv writer
-	// after new records are compared to existing records
-	channels["ih"] = make(chan []string, buffer)
+	results = make(map[string](chan []string))
 
 	// other channels for filtering data are closed in this function
-	names := []string{"diff", "wbc", "cpd", "pdl1", "msi", "pdl1Ret", "msiRet"}
+	resultTypes := []string{
+		"results",
+		"diff",
+		"wbc",
+		"cpd",
+		"pdl1",
+		"msi",
+		"pdl1-to-diff",
+		"msi-to-diff",
+	}
 
-	for _, name := range names {
-		channels[name] = make(chan []string, buffer)
+	for _, name := range resultTypes {
+		results[name] = make(chan []string, buf)
 	}
 
 	ioCores := 2 // save cores for I/O
@@ -193,7 +200,7 @@ func filter(in chan []string, header []string) (channels map[string](chan []stri
 		nProc = 2
 	}
 
-	signal := make(chan int, nProc)
+	signal := make(chan struct{}, nProc)
 
 	// create patterns to use for filtering
 	pat := make(map[string](*regexp.Regexp))
@@ -210,70 +217,32 @@ func filter(in chan []string, header []string) (channels map[string](chan []stri
 	// filter records on each core
 	for i := 0; i < nProc; i++ {
 		go func() {
-			log.Println("starting filtering thread")
-
 			for l := range in {
-				filterRow(l, colNames, pat, channels, &counter)
+				filterRow(l, colNames, pat, results, &counter)
 			}
-			signal <- 1
+			signal <- struct{}{}
 		}()
 	}
 
-	stopCounter := make(chan int)
-	count(&counter, "processed", stopCounter)
+	stopCounter := make(chan struct{})
+	count(&counter, "filtered", stopCounter)
 
 	// wait and close
 	go func() {
 		for i := 0; i < nProc; i++ {
 			<-signal
-
-			log.Println(i)
 		}
 
-		stopCounter <- 1
+		stopCounter <- struct{}{}
 
-		log.Println("total:", counter, "records")
+		log.Println("total filtered:", counter, "records")
 
-		for _, name := range names {
-			close(channels[name])
+		for _, name := range resultTypes {
+			close(results[name])
 		}
 
-		done <- 1
+		done <- struct{}{}
 	}()
 
-	return channels, done
-}
-
-// write writes results to output CSV files.
-func write(h []string, in map[string](chan []string)) (done chan int) {
-	done = make(chan int)
-
-	nOutputFiles := 5
-	signal := make(chan int, nOutputFiles)
-
-	if _, ok := in["ih"]; ok {
-		WriteRows(in["ih"], "ih.csv", h, signal)
-	}
-	if _, ok := in["wbc"]; ok {
-		WriteRows(in["wbc"], "wbc.csv", h, signal)
-	}
-	if _, ok := in["cpd"]; ok {
-		WriteRows(in["cpd"], "cpd.csv", h, signal)
-	}
-	if _, ok := in["pdl1"]; ok {
-		WriteRows(in["pdl1"], "pdl1.csv", h, signal)
-	}
-	if _, ok := in["msi"]; ok {
-		WriteRows(in["msi"], "msi.csv", h, signal)
-	}
-
-	go func() {
-		for i := 0; i < nOutputFiles; i++ {
-			<-signal
-		}
-
-		done <- 1
-	}()
-
-	return done
+	return results, done
 }

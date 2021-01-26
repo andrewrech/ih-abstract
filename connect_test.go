@@ -9,35 +9,38 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/google/go-cmp/cmp"
 )
 
-// TestReadLiveRecord tests that a record can be read from the live PHI-containing SQL databae.
 func TestDBLive(t *testing.T) {
-
-	var configPath string
+	var config string
 	var present bool
 
-	if configPath, present = os.LookupEnv("IH_ABSTRACT_TEST_CONFIG"); !present {
+	if config, present = os.LookupEnv("IH_ABSTRACT_TEST_CONFIG"); !present {
 		t.Skip("IH_ABSTRACT_TEST_CONFIG is unset, skipping connection test")
 	}
 
-	db, err := connect(configPath)
+	db, err := connect(config)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	defer db.Close()
 
-	r := DB(configPath, db)
+	r := DB(config, db)
 
-	for l := range r.out {
-		spew.Dump(l)
+	var counter int64
+	for range r.out {
+		counter++
 	}
 
-	<-r.done
+	t.Run("Read 5 records from live database", func(t *testing.T) {
+		if counter != 10 {
+			t.Fatalf("failed to read 5 records from live Immune Health SQL database")
+		}
+	})
 
+	<-r.done
 }
 
 func TestDBMock(t *testing.T) {

@@ -12,8 +12,7 @@ import (
 )
 
 // read reads raw input data.
-func read(f flags) (r rawRecords) {
-
+func read(f flags, in *os.File) (r rawRecords) {
 	log.Println("initializing records map")
 
 	if *f.sql {
@@ -31,11 +30,10 @@ func read(f flags) (r rawRecords) {
 	if !(*f.sql) {
 		log.Println("reading Stdin")
 
-		r = readCSV(os.Stdin)
+		r = readCSV(in)
 	}
 
 	return r
-
 }
 
 // readSQLRows reads rows of strings from an SQL database.

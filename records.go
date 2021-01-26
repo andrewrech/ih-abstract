@@ -3,9 +3,11 @@ package main
 import (
 	"bytes"
 	"encoding/gob"
+	"errors"
 	"log"
 	"os"
 	"runtime"
+	"strings"
 	"sync"
 	"sync/atomic"
 

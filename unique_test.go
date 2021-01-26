@@ -1,10 +1,6 @@
 package main
 
 import (
-	"encoding/csv"
-	"fmt"
-	"log"
-	"os"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"

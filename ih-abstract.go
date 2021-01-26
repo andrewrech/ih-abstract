@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"strings"
 )
 
 // ih-abstract streams input raw pathology results to the immune.health.report R package for report generation and quality assurance. The input is .csv data or direct streaming from a Microsoft SQL driver-compatible database. The output is filtered .csv files for incremental new report generation and quality assurance.

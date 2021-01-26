@@ -1,12 +1,11 @@
 package main
 
 import (
-	"encoding/csv"
-	"io"
 	"log"
 	"os"
-	"sync/atomic"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 // TestFile is a test CSV file containing simulated / de-identified input data.

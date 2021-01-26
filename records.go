@@ -118,25 +118,22 @@ func Existing(name *string) (rs *Records) {
 
 // New identifies new Pathology database records based on a record hash.
 // For each new record, the corresponding patient identifier to saved to a file.
-func New(r *Records, colNames map[string]int, in chan []string) (out chan []string, done chan int) {
+func New(r *Records, header []string, in chan []string, out chan []string, done chan struct{}) {
 	var counter int64
 
-	n := make(map[string]([]string))
+	n := make(map[string](struct{}))
+	w := File("new-ids.txt", []string{"identifier"})
 
-	var buf int64 = 2e7
-
-	out = make(chan []string, buf)
-
-	done = make(chan int)
-
-	h := []string{"MRN", "MRNFacility", "MedViewPatientID", "PatientName", "DOB"}
-
-	w := File("new-ids.txt", h)
+	id, err := RecordID(header)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	colNames := headerParse(header)
+	idIdx := colNames[id]
 
 	go func() {
 		for l := range in {
 			i := l
-
 			out <- i
 
 			exists, err := r.Check(&i)
@@ -148,27 +145,17 @@ func New(r *Records, colNames map[string]int, in chan []string) (out chan []stri
 				continue
 			}
 
-			_, ok := n[l[colNames["MRN"]]] // do not duplicate record
+			_, ok := n[l[idIdx]] // do not duplicate person instance output
 
 			if ok {
 				continue
 			}
 
-			k := l[colNames["MRN"]]
-			v := []string{
-				l[colNames["MRNFacility"]],
-				l[colNames["MedViewPatientID"]],
-				l[colNames["PatientName"]],
-				l[colNames["DOB"]],
-			}
-
-			n[k] = v
+			n[l[idIdx]] = struct{}{}
 		}
 
-		for k, v := range n {
-			s := append([]string{k}, v...)
-
-			err := w.w.Write(s)
+		for k := range n {
+			err := w.w.Write([]string{k})
 			if err != nil {
 				log.Fatalln(err)
 			}

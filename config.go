@@ -35,7 +35,6 @@ type confVars struct {
 
 // locateDefaultConfig locates the configuration file in $XDG_CONFIG_HOME, $HOME, or the current directory.
 func locateDefaultConfig() (config string, err error) {
-
 	defaultConfigDir, defaultConfigDirSet := os.LookupEnv("XDG_CONFIG_HOME")
 
 	// first check $XDG_CONFIG_HOME
@@ -74,11 +73,9 @@ func locateDefaultConfig() (config string, err error) {
 	}
 
 	return "", errors.New("Cannot locate SQL database configuration file at default locations $XDG_CONFIG_HOME/ih-abstract/ih-abstract.yml, $HOME/.ih-abstract.yml, and ./ih-abstract.yml")
-
 }
 
 func loadConfig(config string) (vars confVars, err error) {
-
 	y, err := ioutil.ReadFile(config)
 	if err != nil {
 		return vars, err

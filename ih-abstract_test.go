@@ -11,7 +11,7 @@ import (
 // TestFile is a test CSV file containing simulated / de-identified input data.
 const TestFile = "test.csv"
 
-// TestFileOld is a test CSV file containing simulated / de-identified input data.
+// TestFileOld is a test CSV file containing simulated / de-identified outdated input data.
 // Some records are removed to simulate old data.
 const TestFileOld = "test_old.csv"
 

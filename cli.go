@@ -59,17 +59,17 @@ DETAILS:
   Immune Health report results for manual review.
 
   Dependencies are vendored and consist of the Go standard library and
-  Microsoft SQL driver.
+  a Go Microsoft SQL driver.
 
 OUTPUT:
 
-  Output for report generation:
+  Output:
 
     results.csv:                     all results
     results-increment.csv:           new results since last run
     new-ids.txt:                     patient identifiers with new results since last run
 
- Output for quality assurance:
+ Output for Immune Health report quality assurance:
 
     pdl1.csv:                        potential PD-L1 reports
     msi.csv:                         potential MSI reports
@@ -97,21 +97,18 @@ TESTING:
                           PHI-containing data. Data is available within our
                           organization upon request.
 
-													NOTE: To test the live server connection, set
+													NOTE: To test the live database connection, set
                           environment variable IH_ABSTRACT_TEST_CONFIG to
                           a test configuration file path.
-                          These tests is disabled by default.
+                          Live database tests disabled by default.
 
 BENCHMARKING:
 
   go test -bench=.
                           NOTE: some benchmarks require restricted
                           organization VPN access. Access is available within our
-                          organization upon request. To test the live server
-                          connection, set environment variable
-                          IH_ABSTRACT_TEST_CONFIG to a test configuration
-                          file path. These tests is disabled by default.
-
+                          organization upon request. These benchmarks are
+                          disabled by default.
 `)
 	}
 }

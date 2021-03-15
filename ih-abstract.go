@@ -11,7 +11,7 @@ import (
 func main() {
 	usage()
 
-	log.Println("starting")
+	log.Println("ih-abstract starting")
 
 	f := flagParse()
 

@@ -87,6 +87,29 @@ func TestNewRecords(t *testing.T) {
 	})
 }
 
+func TestRecordID(t *testing.T) {
+	header := []string{"MRN", "MRNFacilityID", "UID"}
+	headerBad := []string{"NoID", "InThis", "Header"}
+
+	id, _ := RecordID(header)
+
+	t.Run("Get record ID data column name", func(t *testing.T) {
+		diff := cmp.Diff("MRN", id)
+		if diff != "" {
+			t.Fatalf(diff)
+		}
+	})
+
+	_, err := RecordID(headerBad)
+
+	t.Run("Error if no record ID data column name", func(t *testing.T) {
+		diff := cmp.Diff(err.Error(), string("cannot identify patient instance column name"))
+		if diff != "" {
+			t.Fatalf(diff)
+		}
+	})
+}
+
 func BenchmarkNewRecords(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		f := TestFilePhi

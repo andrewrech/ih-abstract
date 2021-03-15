@@ -171,7 +171,7 @@ func New(r *Records, header []string, in chan []string, out chan []string, done 
 	}()
 }
 
-// RecordID returns a single input data column name containing a person-instance identifier.
+// RecordID gets a single input data column name containing a person-instance identifier.
 // The person instance identifier is either an MRN (preferred) or UID.
 func RecordID(header []string) (id string, err error) {
 	for _, id := range header {

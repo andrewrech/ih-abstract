@@ -87,6 +87,22 @@ func TestReadLiveSQLRows(t *testing.T) {
 }
 
 func BenchmarkReadLiveSQLRows(b *testing.B) {
+	// Benchmark results:
+	// Total records read is a major factor in slowdown
+	// Unclear if this is related to connection over VPN or other factors
+	// Incrementally reading results would improve performance at least 25x
+	// go test -run xxx -bench Live
+	// goos: linux
+	// goarch: amd64
+	// pkg: github.com/andrewrech/ih-abstract
+	// cpu: Intel(R) Core(TM) i5-8210Y CPU @ 1.60GHz
+	// Read_5_since_2020-2             10         145743066 ns/op
+	// Read_5_recent_date-2             5         297709119 ns/op
+	// Read_5_all_dates-2               9         128749305 ns/op
+	// Read_all_from_distant_24_hour_period-2   1 38676233648 ns/op
+	// Read_all_from_recent_24_hour_period-2    1 6274454093 ns/op
+	// Read_all_from_recent_48_hour_period-2    1 144199276366 ns/op
+	// Read_all_from_recent_96_hour_period-2    1 113868611573 ns/op
 	var config string
 	var present bool
 
@@ -103,7 +119,6 @@ func BenchmarkReadLiveSQLRows(b *testing.B) {
 		name  string
 		input string
 	}{
-		// these are all fast
 		{
 			"Read 5 since 2020",
 			"SELECT TOP (5) * FROM [DMEE_ExtAccess].[immune_health].[LabData] WHERE MRNFacility = 'UID' AND DrawnDate >= '2020-01-01'",

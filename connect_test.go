@@ -35,7 +35,7 @@ func TestDBLive(t *testing.T) {
 	}
 
 	t.Run("Read 5 records from live database", func(t *testing.T) {
-		if counter != 10 {
+		if counter != 5 {
 			t.Fatalf("failed to read 5 records from live Immune Health SQL database")
 		}
 	})

@@ -105,7 +105,6 @@ func TestFullFilter(t *testing.T) {
 	f.old = &old
 	f.sql = &sql
 
-	defer cleanupTestFull()
 	innerTest(f, TestFile)
 
 	tests := map[string]struct {
@@ -154,7 +153,6 @@ func TestFullNoFilter(t *testing.T) {
 	f.old = &old
 	f.sql = &sql
 
-	defer cleanupTestFull()
 	innerTest(f, TestFile)
 
 	tests := map[string]struct {
@@ -218,7 +216,6 @@ func TestPHIFilter(t *testing.T) {
 	f.old = &old
 	f.sql = &sql
 
-	defer cleanupTestFull()
 	innerTest(f, TestFilePhi)
 
 	tests := map[string]struct {
@@ -279,7 +276,6 @@ func TestPHINoFilter(t *testing.T) {
 	f.old = &old
 	f.sql = &sql
 
-	// defer cleanupTestFull()
 	innerTest(f, TestFilePhiGeneric)
 
 	tests := map[string]struct {

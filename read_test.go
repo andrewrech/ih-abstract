@@ -117,20 +117,20 @@ func BenchmarkReadLiveSQLRows(b *testing.B) {
 			"SELECT TOP (5) * FROM [DMEE_ExtAccess].[immune_health].[LabData] WHERE MRNFacility = 'UID' AND DrawnDate >= '2010-01-01'",
 		},
 		{
-			"Read all from distant 24 period",
+			"Read all from distant 24 hour period",
 			"SELECT * FROM [DMEE_ExtAccess].[immune_health].[LabData] WHERE MRNFacility = 'UID' AND DrawnDate >= '2016-03-19' AND DrawnDate <= '2016-03-21'",
 		},
 		{
-			"Read all from recent 24 period",
+			"Read all from recent 24 hour period",
 			"SELECT * FROM [DMEE_ExtAccess].[immune_health].[LabData] WHERE MRNFacility = 'UID' AND DrawnDate >= '2016-03-19' AND DrawnDate <= '2016-03-21'",
 		},
 		{
-			"Read all from recent week",
-			"SELECT * FROM [DMEE_ExtAccess].[immune_health].[LabData] WHERE MRNFacility = 'UID' AND DrawnDate >= '2021-03-13' AND DrawnDate <= '2021-03-21'",
+			"Read all from recent 48 hour period",
+			"SELECT * FROM [DMEE_ExtAccess].[immune_health].[LabData] WHERE MRNFacility = 'UID' AND DrawnDate >= '2021-03-18' AND DrawnDate <= '2021-03-21'",
 		},
 		{
-			"Read all from recent two weeks",
-			"SELECT * FROM [DMEE_ExtAccess].[immune_health].[LabData] WHERE MRNFacility = 'UID' AND DrawnDate >= '2021-03-06' AND DrawnDate <= '2021-03-21'",
+			"Read all from recent 96 hour period",
+			"SELECT * FROM [DMEE_ExtAccess].[immune_health].[LabData] WHERE MRNFacility = 'UID' AND DrawnDate >= '2021-03-16' AND DrawnDate <= '2021-03-21'",
 		},
 	}
 	for _, bm := range benchmarks {

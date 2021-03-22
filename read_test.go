@@ -33,6 +33,25 @@ func TestReadCSV(t *testing.T) {
 	})
 }
 
+func BenchmarkReadCSV(b *testing.B) {
+	mock := strings.NewReader(`MRN,MRNFacility,MedViewPatientID,PatientName,DOB,Sex,DrawnDate,DiagServiceID,AccessionNumber,HNAMOrderID,OrderTypeLocalID,OrderTypeMnemonic,TestTypeLocalID,TestTypeMnemonic,ResultDate,Value
+"1000000001      ","UID",1111111111,"ZZZ, ZZZ",1950006-16 00:00:00.000,M,2020-11-15 05:28:00.000,GL,00000111111111,1111111111,1111111111,CMV,1111111111111,WBC,2014-11-15 05:37:58.000,Test removal on basis of Order
+`)
+
+	r := readCSV(mock)
+
+	<-r.done
+
+	for i := 0; i < b.N; i++ {
+		var i int64
+
+		for range r.out {
+			i++
+		}
+
+	}
+}
+
 func TestReadSQLRows(t *testing.T) {
 	var config string
 	var present bool

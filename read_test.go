@@ -103,3 +103,20 @@ func TestRead(t *testing.T) {
 		}
 	})
 }
+
+func BenchmarkRead(b *testing.B) {
+	var f flags
+	sql := false
+	f.sql = &sql
+
+	for i := 0; i < b.N; i++ {
+
+		conn, err := os.Open(TestFile)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		r := read(f, conn)
+		<-r.done
+	}
+}

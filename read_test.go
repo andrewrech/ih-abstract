@@ -66,6 +66,9 @@ func TestReadSQLRows(t *testing.T) {
 	}
 
 	vars, err := loadConfig(config)
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	vars.Query = "SELECT TOP (1000) * FROM [DMEE_ExtAccess].[immune_health].[LabData] WHERE MRNFacility = 'UID' AND DrawnDate >= '2020-01-01'"
 
@@ -74,7 +77,6 @@ func TestReadSQLRows(t *testing.T) {
 	r := readSQLRows(rows)
 
 	var counter int64
-
 	for range r.out {
 		counter++
 	}

@@ -90,6 +90,8 @@ func innerTest(f flags, newFile string) {
 }
 
 func TestFullFilter(t *testing.T) {
+	cleanupTestFull()
+
 	config := ""
 	example := false
 	noFilter := false
@@ -137,6 +139,8 @@ func TestFullFilter(t *testing.T) {
 }
 
 func TestFullNoFilter(t *testing.T) {
+	cleanupTestFull()
+
 	config := ""
 	example := false
 	noFilter := true
@@ -181,6 +185,8 @@ func TestPHIFilter(t *testing.T) {
 	if err != nil {
 		log.Fatalln(err)
 	}
+
+	cleanupTestFull()
 
 	err = os.Link("pdl1-unique-strings.csv-test", "pdl1-unique-strings.csv")
 	if err != nil {
@@ -250,6 +256,8 @@ func TestPHINoFilter(t *testing.T) {
 	if err != nil {
 		log.Fatalln(err)
 	}
+
+	cleanupTestFull()
 
 	defer func() {
 		err := os.Chdir("../")

@@ -11,7 +11,7 @@ import (
 func count(counter *int64, descr string, signal chan struct{}) {
 	second := make(chan struct{})
 
-	counterInterval := 500000000 // nanoseconds
+	counterInterval := 2000000000 // nanoseconds
 	t := time.Duration(counterInterval)
 
 	go func() {

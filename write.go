@@ -58,6 +58,7 @@ func File(name string, h []string) (w Writer) {
 func WriteRows(in chan []string, name string, h []string, done chan struct{}) {
 	w := File(name, h)
 
+	log.Println("Writing", name)
 	go func() {
 		for l := range in {
 			err := w.w.Write(l)
@@ -70,6 +71,7 @@ func WriteRows(in chan []string, name string, h []string, done chan struct{}) {
 
 		w.done()
 		done <- struct{}{}
+		log.Println("Wrote", w.counter, "records to", name)
 	}()
 }
 

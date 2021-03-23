@@ -118,7 +118,7 @@ func Existing(name *string) (rs *Records) {
 
 // New identifies new Pathology database records based on a record hash.
 // For each new record, the corresponding patient identifier to saved to a file.
-func New(r *Records, header []string, in chan []string, out chan []string, done chan struct{}) {
+func New(r *Records, header []string, in chan []string, newOut chan []string, done chan struct{}) {
 	var counter int64
 
 	n := make(map[string](struct{}))
@@ -134,7 +134,6 @@ func New(r *Records, header []string, in chan []string, out chan []string, done 
 	go func() {
 		for l := range in {
 			i := l
-			out <- i
 
 			exists, err := r.Check(&i)
 			if err != nil {
@@ -144,6 +143,9 @@ func New(r *Records, header []string, in chan []string, out chan []string, done 
 			if exists {
 				continue
 			}
+
+			// send record on channel if new
+			newOut <- i
 
 			_, ok := n[l[idIdx]] // do not duplicate person instance output
 
@@ -164,7 +166,7 @@ func New(r *Records, header []string, in chan []string, out chan []string, done 
 		}
 
 		w.done()
-		close(out)
+		close(newOut)
 		close(done)
 
 		log.Println("Person-instances with new records:", counter)

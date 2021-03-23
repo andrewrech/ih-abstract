@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -112,13 +113,13 @@ func TestFullFilter(t *testing.T) {
 		want  int64
 	}{
 		"integration: cpd.csv":                     {input: "cpd.csv", want: int64(2)},
-		"integration: msi-unique-strings-new.csv":  {input: "msi-unique-strings-new.csv", want: int64(3)},
-		"integration: msi-unique-strings.csv":      {input: "msi-unique-strings.csv", want: int64(3)},
+		"integration: msi-unique-strings-new.csv":  {input: "msi-unique-strings-new.csv", want: int64(2)},
+		"integration: msi-unique-strings.csv":      {input: "msi-unique-strings.csv", want: int64(2)},
 		"integration: pdl1-unique-strings-new.csv": {input: "pdl1-unique-strings-new.csv", want: int64(2)},
 		"integration: pdl1-unique-strings.csv":     {input: "pdl1-unique-strings.csv", want: int64(2)},
-		"integration: pdl1.csv":                    {input: "pdl1.csv", want: int64(5)},
-		"integration: results-increment.csv":       {input: "results-increment.csv", want: int64(8)},
-		"integration: results.csv":                 {input: "results.csv", want: int64(12)},
+		"integration: pdl1.csv":                    {input: "pdl1.csv", want: int64(7)},
+		"integration: results-increment.csv":       {input: "results-increment.csv", want: int64(6)},
+		"integration: results.csv":                 {input: "results.csv", want: int64(13)},
 		"integration: wbc.csv":                     {input: "wbc.csv", want: int64(5)},
 	}
 
@@ -131,6 +132,20 @@ func TestFullFilter(t *testing.T) {
 
 			diff := cmp.Diff(tc.want, got)
 			if diff != "" {
+				t.Fatalf(diff)
+			}
+		})
+	}
+
+	out := helperTestReader("results-increment.csv")
+
+	for l := range out {
+		t.Run("integration: result line is new", func(t *testing.T) {
+			got := strings.Contains(l[0], "New")
+
+			diff := cmp.Diff(true, got)
+			if diff != "" {
+				log.Println("Failing line:", l)
 				t.Fatalf(diff)
 			}
 		})
@@ -159,8 +174,8 @@ func TestFullNoFilter(t *testing.T) {
 		input string
 		want  int64
 	}{
-		"integration: results-increment.csv": {input: "results-increment.csv", want: int64(13)},
-		"integration: results.csv":           {input: "results.csv", want: int64(13)},
+		"integration: results-increment.csv": {input: "results-increment.csv", want: int64(9)},
+		"integration: results.csv":           {input: "results.csv", want: int64(14)},
 	}
 
 	for name, tc := range tests {
@@ -228,7 +243,7 @@ func TestPHIFilter(t *testing.T) {
 		"integration: pdl1-unique-strings-new.csv": {input: "pdl1-unique-strings-new.csv", want: int64(1)},
 		"integration: pdl1-unique-strings.csv":     {input: "pdl1-unique-strings.csv", want: int64(16)},
 		"integration: pdl1.csv":                    {input: "pdl1.csv", want: int64(118)},
-		"integration: results-increment.csv":       {input: "results-increment.csv", want: int64(725)},
+		"integration: results-increment.csv":       {input: "results-increment.csv", want: int64(293)},
 		"integration: results.csv":                 {input: "results.csv", want: int64(334924)},
 		"integration: wbc.csv":                     {input: "wbc.csv", want: int64(334200)},
 	}
@@ -282,7 +297,7 @@ func TestPHINoFilter(t *testing.T) {
 		input string
 		want  int64
 	}{
-		"integration: results-increment.csv": {input: "results-increment.csv", want: int64(50001)},
+		"integration: results-increment.csv": {input: "results-increment.csv", want: int64(24432)},
 	}
 
 	for name, tc := range tests {

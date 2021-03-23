@@ -32,11 +32,11 @@ func TestFilter(t *testing.T) {
 		input string
 		want  int64
 	}{
-		"diff":           {input: string("diff"), want: int64(7)},
+		"diff":           {input: string("diff"), want: int64(8)},
 		"filter (CPD)":   {input: string("cpd"), want: int64(1)},
 		"filter (WBC)":   {input: string("wbc"), want: int64(4)},
-		"filter (PD-L1)": {input: string("pdl1"), want: int64(4)},
-		"filter (MSI)":   {input: string("msi"), want: int64(2)},
+		"filter (PD-L1)": {input: string("pdl1"), want: int64(6)},
+		"filter (MSI)":   {input: string("msi"), want: int64(1)},
 	}
 
 	for x, n := range ts {

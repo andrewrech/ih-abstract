@@ -38,7 +38,7 @@ func TestExistingRecords(t *testing.T) {
 	r := Existing(&f)
 
 	t.Run("existing", func(t *testing.T) {
-		diff := cmp.Diff(int(12), len(r.Store))
+		diff := cmp.Diff(int(13), len(r.Store))
 		if diff != "" {
 			t.Fatalf(diff)
 		}
@@ -80,7 +80,7 @@ func TestNewRecords(t *testing.T) {
 	t.Run("Detect new data", func(t *testing.T) {
 		lines := helperCsvLines("new-ids.txt")
 
-		diff := cmp.Diff(int64(11), lines)
+		diff := cmp.Diff(int64(8), lines)
 		if diff != "" {
 			t.Fatalf(diff)
 		}

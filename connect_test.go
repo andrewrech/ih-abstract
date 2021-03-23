@@ -81,7 +81,7 @@ func TestDBMock(t *testing.T) {
 	<-r.done
 
 	t.Run("Read from mock SQL", func(t *testing.T) {
-		diff := cmp.Diff(int64(12), counter)
+		diff := cmp.Diff(int64(13), counter)
 		if diff != "" {
 			t.Fatalf(diff)
 		}

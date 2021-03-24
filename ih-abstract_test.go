@@ -59,21 +59,22 @@ func TestMain(m *testing.M) {
 func cleanupTestFull() {
 	testFiles := []string{
 		"cpd.csv",
-		"msi-unique-strings.csv",
 		"msi-unique-strings-new.csv",
+		"msi-unique-strings.csv",
 		"msi.csv",
 		"new-ids.tst",
-		"pdl1-unique-strings.csv",
 		"pdl1-unique-strings-new.csv",
+		"pdl1-unique-strings.csv",
 		"pdl1.csv",
 		"results-increment.csv",
+		"results-all.csv",
 		"results.csv",
 		"wbc.csv",
 	}
 
-	for _, f := range testFiles {
-		if _, err := os.Stat(f); err == nil {
-			err := os.Remove(f)
+	for _, fn := range testFiles {
+		if _, err := os.Stat(fn); err == nil {
+			err := os.Remove(fn)
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -119,6 +120,7 @@ func TestFullFilter(t *testing.T) {
 		"integration: pdl1-unique-strings.csv":     {input: "pdl1-unique-strings.csv", want: int64(2)},
 		"integration: pdl1.csv":                    {input: "pdl1.csv", want: int64(7)},
 		"integration: results-increment.csv":       {input: "results-increment.csv", want: int64(6)},
+		"integration: results-all.csv":             {input: "results-increment.csv", want: int64(6)},
 		"integration: results.csv":                 {input: "results.csv", want: int64(13)},
 		"integration: wbc.csv":                     {input: "wbc.csv", want: int64(5)},
 	}
@@ -175,6 +177,7 @@ func TestFullNoFilter(t *testing.T) {
 		want  int64
 	}{
 		"integration: results-increment.csv": {input: "results-increment.csv", want: int64(9)},
+		"integration: results-all.csv":       {input: "results-increment.csv", want: int64(9)},
 		"integration: results.csv":           {input: "results.csv", want: int64(14)},
 	}
 
@@ -201,15 +204,8 @@ func TestPHIFilter(t *testing.T) {
 
 	cleanupTestFull()
 
-	err = os.Link("pdl1-unique-strings.csv-test", "pdl1-unique-strings.csv")
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	err = os.Link("msi-unique-strings.csv-test", "msi-unique-strings.csv")
-	if err != nil {
-		log.Fatalln(err)
-	}
+	copyFileContents("pdl1-unique-strings.csv-test", "pdl1-unique-strings.csv")
+	copyFileContents("msi-unique-strings.csv-test", "msi-unique-strings.csv")
 
 	defer func() {
 		err := os.Chdir("../")
@@ -244,6 +240,7 @@ func TestPHIFilter(t *testing.T) {
 		"integration: pdl1-unique-strings.csv":     {input: "pdl1-unique-strings.csv", want: int64(16)},
 		"integration: pdl1.csv":                    {input: "pdl1.csv", want: int64(118)},
 		"integration: results-increment.csv":       {input: "results-increment.csv", want: int64(293)},
+		"integration: results-all.csv":             {input: "results-increment.csv", want: int64(293)},
 		"integration: results.csv":                 {input: "results.csv", want: int64(334924)},
 		"integration: wbc.csv":                     {input: "wbc.csv", want: int64(334200)},
 	}
@@ -298,6 +295,7 @@ func TestPHINoFilter(t *testing.T) {
 		want  int64
 	}{
 		"integration: results-increment.csv": {input: "results-increment.csv", want: int64(24432)},
+		"integration: results-all.csv":       {input: "results-increment.csv", want: int64(24432)},
 	}
 
 	for name, tc := range tests {

@@ -22,7 +22,7 @@ func TestRowWriter(t *testing.T) {
 
 		f := "test-write.csv"
 
-		WriteRows(r.out, f, r.header, writeDone)
+		WriteRows(r.out, f, r.header, true, writeDone)
 		defer os.Remove("test-write.csv")
 
 		<-writeDone
@@ -57,6 +57,24 @@ func TestWrite(t *testing.T) {
 
 		lines := helperCsvLines("test-write.csv")
 		diff := cmp.Diff(int64(2), lines)
+
+		if diff != "" {
+			t.Fatalf(diff)
+		}
+	})
+}
+
+func TestWriteIncremental(t *testing.T) {
+	header := []string{"MRN", "MRNFacility", "MedViewPatientID", "PatientName", "DOB", "Sex", "DrawnDate", "DiagServiceID", "AccessionNumber", "HNAMOrderID", "OrderTypeLocalID", "OrderTypeMnemonic", "TestTypeLocalID", "TestTypeMnemonic", "ResultDate", "Value"}
+
+	done := WriteIncremental(TestFile, TestFileOld, header)
+
+	<-done
+
+	t.Run("append new results to an existing results file", func(t *testing.T) {
+		lines := helperCsvLines("results-all.csv")
+
+		diff := cmp.Diff(int64(21), lines)
 
 		if diff != "" {
 			t.Fatalf(diff)

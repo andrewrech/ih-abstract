@@ -87,4 +87,8 @@ func mainInner(f flags, in *os.File) {
 			<-signal
 		}
 	}
+
+	// finally, update results
+	writeIncrementalDone := WriteIncremental("results-increment.csv", *f.old, r.header)
+	<-writeIncrementalDone
 }

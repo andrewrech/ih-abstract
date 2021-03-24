@@ -122,7 +122,7 @@ func New(r *Records, header []string, in chan []string, newOut chan []string, do
 	var counter int64
 
 	n := make(map[string](struct{}))
-	w := File("new-ids.txt", []string{"identifier"})
+	w := File("new-ids.txt", []string{"identifier"}, true)
 
 	id, err := RecordID(header)
 	if err != nil {
@@ -205,7 +205,6 @@ func Diff(oldFile *string, in chan []string, header []string) (out chan []string
 		r.Store = make(Store)
 
 		r = Existing(oldFile)
-
 		New(r, header, in, out, done)
 	}()
 

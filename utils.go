@@ -1,7 +1,9 @@
 package main
 
 import (
+	"io"
 	"log"
+	"os"
 	"time"
 
 	_ "github.com/davecgh/go-spew/spew"
@@ -53,4 +55,37 @@ func splitCh(in chan []string) (out1 chan []string, out2 chan []string, done cha
 	}()
 
 	return
+}
+
+// copyFileContents copies the contents of the file named src to the file named by dst.
+func copyFileContents(src, dst string) {
+	in, err := os.Open(src)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer in.Close()
+
+	out, err := os.Create(dst)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	defer func() {
+		err := out.Close()
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}()
+
+	_, err = io.Copy(out, in)
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	err = out.Sync()
+
+	if err != nil {
+		log.Fatalln(err)
+	}
 }

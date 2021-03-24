@@ -18,8 +18,17 @@ type Writer struct {
 }
 
 // File creates an output CSV write file.
-func File(name string, h []string) (w Writer) {
-	f, err := os.OpenFile(name, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0o644)
+func File(name string, h []string, trunc bool) (w Writer) {
+	var f *os.File
+	var err error
+
+	// open file with trunc or append
+	if trunc {
+		f, err = os.OpenFile(name, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0o644)
+	}
+	if !trunc {
+		f, err = os.OpenFile(name, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	}
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -55,8 +64,8 @@ func File(name string, h []string) (w Writer) {
 }
 
 // WriteRows appends strings to a CSV file using a Writer.
-func WriteRows(in chan []string, name string, h []string, done chan struct{}) {
-	w := File(name, h)
+func WriteRows(in chan []string, name string, h []string, trunc bool, done chan struct{}) {
+	w := File(name, h, trunc)
 
 	log.Println("Writing", name)
 	go func() {
@@ -89,7 +98,7 @@ func Write(h []string, in map[string](chan []string)) (done chan struct{}) {
 		fn.WriteString(i)
 		fn.WriteString(".csv")
 
-		WriteRows(c, fn.String(), h, signal)
+		WriteRows(c, fn.String(), h, true, signal)
 	}
 
 	go func() {
@@ -100,5 +109,30 @@ func Write(h []string, in map[string](chan []string)) (done chan struct{}) {
 		close(done)
 	}()
 
+	return done
+}
+
+// WriteIncremental appends new unique results to an existing results file.
+func WriteIncremental(newFile string, oldFile string, h []string) (done chan struct{}) {
+	fn := "results-all.csv"
+
+	copyFileContents(oldFile, fn)
+
+	conn, err := os.Open(newFile)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	r := readCSV(conn)
+
+	done = make(chan struct{})
+	writeDone := make(chan struct{})
+
+	WriteRows(r.out, fn, h, false, writeDone)
+
+	<-r.done
+	<-writeDone
+
+	close(done)
 	return done
 }

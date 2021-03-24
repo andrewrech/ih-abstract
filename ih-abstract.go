@@ -11,7 +11,7 @@ import (
 func main() {
 	usage()
 
-	log.Println("ih-abstract starting")
+	log.Println("starting")
 
 	f := flagParse()
 
@@ -43,7 +43,6 @@ func mainInner(f flags, in *os.File) {
 
 	// if no filter
 	// write all results and diff results
-	diffResults = make(chan []string, buf)
 	if *f.noFilter {
 		doneSignals[1] = make(chan struct{})
 		allResults["results"] = make(chan []string, buf)
